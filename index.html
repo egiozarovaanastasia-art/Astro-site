@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOX | Астрономия</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+  :root {
+    --bg-main: #050505;
+    --bg-card: #0f0f11;
+    --accent: #a374ff; /* Фиолетовый акцент */
+    --accent-hover: #c7a2ff;
+    --text-main: #ffffff;
+    --text-muted: #888888;
+    --border-color: #222222;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body { 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main); 
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* --- КОСМИЧЕСКИЙ ФОН (ЗВЕЗДЫ И ПЛАНЕТЫ) --- */
+  .space-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .star {
+    position: absolute; background: #ffffff; border-radius: 50%;
+    opacity: 0.3; animation: twinkle ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    0% { opacity: 0.1; }
+    100% { opacity: 0.8; }
+  }
+  /* Строгие планеты (круглые градиенты) */
+  .planet {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(163, 116, 255, 0.15), transparent 60%);
+    border: 1px solid rgba(163, 116, 255, 0.05);
+  }
+
+  /* --- ШАПКА (ЖУРНАЛЬНЫЙ СТИЛЬ) --- */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 30px; background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border-color);
+  }
+  .logo { font-size: 20px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; color: #fff; }
+  .header-btns { display: flex; gap: 15px; align-items: center; }
+  
+  .icon-btn {
+    background: transparent; border: none; color: var(--text-main);
+    cursor: pointer; font-size: 24px; transition: color 0.2s;
+    display: flex; align-items: center;
+  }
+  .icon-btn:hover { color: var(--accent); }
+
+  /* Боковое меню */
+  .sidebar {
+    position: fixed; top: 0; left: -320px; width: 320px; height: 100vh;
+    background: var(--bg-main); z-index: 20; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid var(--border-color); padding: 30px; overflow-y: auto;
+  }
+  .sidebar.open { left: 0; }
+  .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+  .sidebar h2 { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+  
+  .sidebar-list { list-style: none; }
+  .sidebar-list li {
+    padding: 15px 0; border-bottom: 1px solid var(--border-color);
+    cursor: pointer; font-size: 18px; font-weight: 600; transition: color 0.2s;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .sidebar-list li:hover { color: var(--accent); }
+  
+  .sidebar-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); z-index: 15; display: none; backdrop-filter: blur(4px);
+  }
+  .sidebar-overlay.active { display: block; }
+
+  /* --- ОСНОВНОЙ КОНТЕНТ --- */
+  main { padding: 40px 20px; position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; }
+  
+  /* Большой журнальный заголовок */
+  .hero-title {
+    font-size: 3rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: -1px; line-height: 1.1; margin-bottom: 20px;
+  }
+  .hero-title span { color: var(--accent); }
+  .hero-subtitle {
+    color: var(--text-muted); font-size: 16px; max-width: 600px; margin-bottom: 40px;
+  }
+
+  /* Поиск */
+  .search-bar {
+    width: 100%; padding: 15px 0; border-radius: 0;
+    border: none; border-bottom: 1px solid var(--border-color); 
+    background: transparent; color: #fff;
+    margin-bottom: 40px; font-size: 18px; outline: none; transition: border-color 0.3s;
+    font-family: 'Inter', sans-serif;
+  }
+  .search-bar:focus { border-bottom-color: var(--accent); }
+  .search-bar::placeholder { color: #444; }
+  .search-bar:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Кнопки добавления */
+  .btn-add {
+    background: var(--accent); color: #000; border: none;
+    padding: 10px 20px; border-radius: 4px; font-weight: 800; cursor: pointer;
+    text-decoration: none; display: inline-block; transition: 0.2s;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .btn-add:hover { background: var(--accent-hover); }
+  
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;
+  }
+  .section-header h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); }
+
+  /* Сетка категорий */
+  .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  .category-card {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    padding: 30px; cursor: pointer; transition: all 0.3s;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+  }
+  .category-card:hover {
+    border-color: var(--accent); transform: translateY(-2px);
+  }
+  .category-card span { font-size: 30px; margin-bottom: 20px; display: block; }
+  .category-card h3 { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px; }
+  .category-card .count { font-size: 12px; color: var(--text-muted); margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* Карточки статей (Журнальный стиль) */
+  .article-card {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    padding: 25px; margin-bottom: 20px; cursor: pointer; transition: all 0.3s;
+    display: flex; flex-direction: column;
+  }
+  .article-card:hover { border-color: var(--accent); }
+  
+  .article-meta {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--accent); margin-bottom: 15px; font-weight: 600;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .article-card h3 { 
+    font-size: 22px; font-weight: 800; text-transform: uppercase; 
+    margin-bottom: 15px; line-height: 1.2; letter-spacing: -0.5px;
+  }
+  .article-card p { 
+    color: var(--text-muted); font-size: 14px; line-height: 1.6; 
+    margin-bottom: 20px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .read-more { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 5px; }
+  
+  /* Экран чтения статьи */
+  .article-view-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+  .article-view-header h1 { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 15px; letter-spacing: -1px; }
+  #article-view img { width: 100%; border-radius: 4px; margin-bottom: 30px; border: 1px solid var(--border-color); }
+  #article-view p { font-size: 16px; line-height: 1.8; color: #cccccc; margin-bottom: 20px; }
+
+  .back-btn {
+    background: transparent; color: var(--text-muted); border: none;
+    padding: 10px 0; cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;
+    display: inline-flex; align-items: center; transition: color 0.2s; margin-bottom: 20px;
+  }
+  .back-btn:hover { color: var(--accent); }
+
+  .hidden { display: none !important; }
+
+  /* Блок загрузки */
+  #local-upload-box {
+    text-align: center; padding: 50px; background: var(--bg-card);
+    border: 1px solid var(--border-color); margin-top: 20px;
+  }
+  #local-upload-box h3 { color: var(--accent); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; font-size: 16px;}
+  #local-upload-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; }
+  .file-input-label {
+    background: var(--accent); color: #000; padding: 12px 24px;
+    cursor: pointer; font-weight: 800; display: inline-block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .hero-title { font-size: 2.2rem; }
+    .article-view-header h1 { font-size: 1.8rem; }
+    .categories-grid { grid-template-columns: 1fr; }
+    main { padding: 20px 15px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Космический фон -->
+<div class="space-bg" id="space-bg"></div>
+
+<header>
+  <div class="logo">VOX</div>
+  <div class="header-btns">
+    <a href="https://docs.google.com/spreadsheets/d/1nUNmF9z_Q00_jd-Q3GgP41QbQzW1zpWr4Iz-iOzRI2w/edit" target="_blank" class="btn-add">+ Статья</a>
+    <button class="icon-btn" onclick="toggleSidebar()">≡</button>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>Навигация</h2>
+    <button class="icon-btn" onclick="toggleSidebar()">×</button>
+  </div>
+  <ul class="sidebar-list" id="sidebar-list"></ul>
+</div>
+
+<main>
+  <div id="main-screen">
+    <h1 class="hero-title">Знания &<br><span>Космос</span></h1>
+    <p class="hero-subtitle">Исследуйте вселенную. Статьи, факты и открытия, собранные в одном месте.</p>
+    
+    <input type="text" id="global-search" class="search-bar" placeholder="Введите запрос для поиска..." oninput="handleGlobalSearch(this.value)" disabled>
+    
+    <div class="section-header">
+      <h2>Категории</h2>
+      <a href="https://docs.google.com/spreadsheets/d/1nUNmF9z_Q00_jd-Q3GgP41QbQzW1zpWr4Iz-iOzRI2w/edit" target="_blank" class="btn-add">+ Добавить</a>
+    </div>
+    
+    <div id="main-content">
+      <div style="text-align:left; padding: 20px 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Загрузка данных...</div>
+    </div>
+  </div>
+
+  <div id="category-screen" class="hidden">
+    <button class="back-btn" onclick="showMainScreen()">← Вернуться на главную</button>
+    <div class="section-header">
+      <h2 id="category-title"></h2>
+      <a href="https://docs.google.com/spreadsheets/d/1nUNmF9z_Q00_jd-Q3GgP41QbQzW1zpWr4Iz-iOzRI2w/edit" target="_blank" class="btn-add">+ Статья</a>
+    </div>
+    <input type="text" id="local-search" class="search-bar" placeholder="Поиск по категории..." oninput="renderCategoryArticles()">
+    <div id="category-articles"></div>
+  </div>
+
+  <div id="article-screen" class="hidden">
+    <button class="back-btn" onclick="goBackFromArticle()">← Назад</button>
+    <div id="article-view"></div>
+  </div>
+</main>
+
+<script>
+// Твоя ссылка на таблицу
+const CSV_URL = "https://docs.google.com/spreadsheets/d/1nUNmF9z_Q00_jd-Q3GgP41QbQzW1zpWr4Iz-iOzRI2w/export?format=csv";
+
+let allArticles = [];
+let currentCategory = "";
+
+// Генерация строгого космического фона
+function createSpaceBackground() {
+  const container = document.getElementById('space-bg');
+  
+  // Звезды (мелкие точки)
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement('div');
+    star.classList.add('star');
+    const size = Math.random() * 2 + 1;
+    star.style.width = `${size}px`;
+    star.style.height = `${size}px`;
+    star.style.left = `${Math.random() * 100}vw`;
+    star.style.top = `${Math.random() * 100}vh`;
+    const twinkleDuration = Math.random() * 4 + 2;
+    star.style.animationDuration = `${twinkleDuration}s`;
+    star.style.animationDelay = `-${Math.random() * twinkleDuration}s`;
+    container.appendChild(star);
+  }
+
+  // Планеты (размытые градиентные круги на фоне)
+  const planetSizes = [300, 500, 200];
+  for (let i = 0; i < 3; i++) {
+    const planet = document.createElement('div');
+    planet.classList.add('planet');
+    const size = planetSizes[i];
+    planet.style.width = `${size}px`;
+    planet.style.height = `${size}px`;
+    planet.style.left = `${Math.random() * 80 - 20}vw`;
+    planet.style.top = `${Math.random() * 80}vh`;
+    // Размытие для эффекта глубины
+    planet.style.filter = `blur(${Math.random() * 20 + 10}px)`; 
+    container.appendChild(planet);
+  }
+}
+
+async function initApp() {
+  try {
+    const response = await fetch(CSV_URL);
+    if (!response.ok) throw new Error("Network error");
+    const csvText = await response.text();
+    processData(csvText);
+    document.getElementById('global-search').disabled = false;
+  } catch (error) {
+    showLocalUploadPrompt();
+  }
+}
+
+function showLocalUploadPrompt() {
+  document.getElementById('main-content').innerHTML = `
+    <div id="local-upload-box">
+      <h3>Локальный предпросмотр</h3>
+      <p>Чтобы увидеть данные, скачайте таблицу из Google в формате <b>.CSV</b> и выберите её здесь:</p>
+      <input type="file" id="csv-file" accept=".csv" style="display:none;" onchange="handleFileUpload(event)">
+      <label for="csv-file" class="file-input-label">Выбрать CSV файл</label>
+    </div>
+  `;
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    processData(e.target.result);
+    document.getElementById('global-search').disabled = false;
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+function processData(csvText) {
+  const rows = parseCSV(csvText);
+  if (rows.length < 2) {
+    document.getElementById('main-content').innerHTML = "<p>В таблице нет данных.</p>";
+    return;
+  }
+
+  const headers = rows[0].map(h => h.trim().toLowerCase());
+  const idxTitle = headers.indexOf('название');
+  const idxCat = headers.indexOf('категория');
+  const idxText = headers.indexOf('текст');
+  const idxPhoto = headers.indexOf('фото');
+  const idxDate = headers.indexOf('дата');
+
+  allArticles = rows.slice(1)
+    .filter(row => row[idxTitle] && row[idxTitle].trim() !== "")
+    .map(row => ({
+      title: row[idxTitle] || "Без названия",
+      category: row[idxCat] ? row[idxCat].trim() : "Разное",
+      text: row[idxText] || "",
+      photo: row[idxPhoto] || "",
+      date: row[idxDate] || ""
+    }));
+
+  document.getElementById('main-screen').classList.remove('hidden');
+  document.getElementById('category-screen').classList.add('hidden');
+  document.getElementById('article-screen').classList.add('hidden');
+  document.getElementById('main-content').innerHTML = `<div class="categories-grid" id="categories-list"></div>`;
+  
+  initCategories();
+  initSidebar();
+}
+
+function parseCSV(text) {
+  const rows = []; let row = []; let field = ''; let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++; }
+      else if (c === '"') inQuotes = false;
+      else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c !== '\r') field += c;
+    }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+function initCategories() {
+  const categories = [...new Set(allArticles.map(a => a.category))];
+  const container = document.getElementById('categories-list');
+  if(!container) return;
+  
+  container.innerHTML = categories.map(cat => {
+    // Считаем количество статей в категории
+    const count = allArticles.filter(a => a.category === cat).length;
+    return `
+      <div class="category-card" onclick="openCategory('${cat.replace(/'/g, "\\'")}')">
+        <span>${getCategoryIcon(cat)}</span>
+        <h3>${cat}</h3>
+        <div class="count">${count} материалов</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function initSidebar() {
+  const categories = [...new Set(allArticles.map(a => a.category))];
+  document.getElementById('sidebar-list').innerHTML = categories.map(cat => `
+    <li onclick="openCategory('${cat.replace(/'/g, "\\'")}'); toggleSidebar();">
+      <span>${cat}</span>
+      <span style="color:var(--text-muted); font-size:14px;">→</span>
+    </li>
+  `).join('');
+}
+
+function getCategoryIcon(cat) {
+  const c = cat.toLowerCase();
+  if (c.includes('планет')) return '🪐';
+  if (c.includes('звезд')) return '⭐';
+  if (c.includes('туман')) return '🌌';
+  if (c.includes('галакт')) return '🌠';
+  if (c.includes('комет') || c.includes('метеор')) return '☄️';
+  return '🌍';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('active');
+}
+
+function showMainScreen() {
+  currentCategory = "";
+  document.getElementById('main-screen').classList.remove('hidden');
+  document.getElementById('category-screen').classList.add('hidden');
+  document.getElementById('article-screen').classList.add('hidden');
+  document.getElementById('global-search').value = "";
+  document.getElementById('main-content').innerHTML = `<div class="categories-grid" id="categories-list"></div>`;
+  initCategories();
+}
+
+function openCategory(catName) {
+  currentCategory = catName;
+  document.getElementById('main-screen').classList.add('hidden');
+  document.getElementById('category-screen').classList.remove('hidden');
+  document.getElementById('article-screen').classList.add('hidden');
+  
+  document.getElementById('category-title').textContent = catName;
+  document.getElementById('local-search').value = ""; 
+  renderCategoryArticles();
+}
+
+function renderCategoryArticles() {
+  const query = document.getElementById('local-search').value.toLowerCase();
+  const filtered = allArticles.filter(a => 
+    a.category === currentCategory && 
+    (a.title.toLowerCase().includes(query) || a.text.toLowerCase().includes(query))
+  );
+
+  const container = document.getElementById('category-articles');
+  if (filtered.length === 0) {
+    container.innerHTML = "<p style='text-align:left; color:var(--text-muted); padding: 20px 0;'>Материалы не найдены.</p>";
+    return;
+  }
+
+  container.innerHTML = filtered.map(a => `
+    <div class="article-card" onclick="openArticle('${a.title.replace(/'/g, "\\'")}')">
+      <div class="article-meta">${a.category} <span>•</span> ${a.date || 'Без даты'}</div>
+      <h3>${a.title}</h3>
+      <p>${a.text}</p>
+      <div class="read-more">Читать статью →</div>
+    </div>
+  `).join('');
+}
+
+function openArticle(title) {
+  const article = allArticles.find(a => a.title === title);
+  if (!article) return;
+
+  document.getElementById('main-screen').classList.add('hidden');
+  document.getElementById('category-screen').classList.add('hidden');
+  document.getElementById('article-screen').classList.remove('hidden');
+
+  document.getElementById('article-view').innerHTML = `
+    <div class="article-view-header">
+      <div class="article-meta">${article.category} <span>•</span> ${article.date || 'Без даты'}</div>
+      <h1>${article.title}</h1>
+    </div>
+    ${article.photo ? `<img src="${article.photo}" alt="${article.title}" onerror="this.style.display='none'">` : ''}
+    <p>${article.text.replace(/\n/g, '<br>')}</p>
+  `;
+  window.scrollTo(0, 0);
+}
+
+function goBackFromArticle() {
+  if (currentCategory) {
+    document.getElementById('article-screen').classList.add('hidden');
+    document.getElementById('category-screen').classList.remove('hidden');
+    renderCategoryArticles(); 
+  } else {
+    showMainScreen();
+  }
+}
+
+function handleGlobalSearch(query) {
+  const q = query.toLowerCase().trim();
+  const mainContent = document.getElementById('main-content');
+  
+  if (q === "") {
+    mainContent.innerHTML = `<div class="categories-grid" id="categories-list"></div>`;
+    initCategories();
+    return;
+  }
+
+  const results = allArticles.filter(a => 
+    a.title.toLowerCase().includes(q) || 
+    a.text.toLowerCase().includes(q) ||
+    a.category.toLowerCase().includes(q)
+  );
+
+  if (results.length === 0) {
+    mainContent.innerHTML = "<p style='text-align:left; color:var(--text-muted); padding: 20px 0;'>По вашему запросу ничего не найдено.</p>";
+    return;
+  }
+
+  mainContent.innerHTML = results.map(a => `
+    <div class="article-card" onclick="openArticle('${a.title.replace(/'/g, "\\'")}')">
+      <div class="article-meta">${a.category} <span>•</span> ${a.date || 'Без даты'}</div>
+      <h3>${a.title}</h3>
+      <p>${a.text}</p>
+      <div class="read-more">Читать статью →</div>
+    </div>
+  `).join('');
+}
+
+// Запуск
+createSpaceBackground();
+initApp();
+</script>
+</body>
+    </html>
